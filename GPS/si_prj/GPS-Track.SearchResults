@@ -1,0 +1,10 @@
+---- g_uGpsStatus Matches (12 in 1 files) ----
+goku_gps_protocol_manager.c (gps_server):static UINT8 g_uGpsStatus = 0x0E;
+goku_gps_protocol_manager.c (gps_server):    g_uGpsStatus = 0x0E;
+goku_gps_protocol_manager.c (gps_server):        g_uGpsStatus &= ~0x02;
+goku_gps_protocol_manager.c (gps_server):        PRINT_FUNC_LINE("g_uGpsStatus =  %x",g_uGpsStatus);
+goku_gps_protocol_manager.c (gps_server):       g_uGpsStatus &= ~0x04;
+goku_gps_protocol_manager.c (gps_server):       PRINT_FUNC_LINE("g_uGpsStatus =  %x",g_uGpsStatus);
+goku_gps_protocol_manager.c (gps_server):       g_uGpsStatus &= ~0x08;
+goku_gps_protocol_manager.c (gps_server):       PRINT_FUNC_LINE("g_uGpsStatus =  %x",g_uGpsStatus);
+goku_gps_protocol_manager.c (gps_server):    return g_uGpsStatus;
