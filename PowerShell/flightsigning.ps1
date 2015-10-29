@@ -72,10 +72,17 @@ function DownloadZip {
 }
 
 function UploadZip {
-    
-    $ZipFile = Get-Content $OutputFilePath\ZipFile.txt
 
     if(([io.File]::Exists("$OutputFilePath\TicketID.txt")) -ne "True"){
+
+        $ZipFile = Get-Content $OutputFilePath\ZipFile.txt
+
+        #Check ZipFile is valid
+        if($ZipFile.Equals("")){
+            $host.UI.WriteErrorLine("ZipFile Content is Empty")
+            exit
+        }
+
         #show upload message
         $host.UI.WriteVerboseLine("New-FirmwareSubmission -verbose -path $OutputFilePath\$ZipFile")
 
@@ -83,6 +90,11 @@ function UploadZip {
 
         #get Result of cmdlet
         $TicketID = $Result.FirmwareSubmissionTicketId
+
+        #Check TicketID is valid
+        if($TicketID.Equals("")){
+            exit
+        }
 
         #show save tip
         $host.UI.WriteVerboseLine("Save TicketID: $TicketID")
@@ -117,6 +129,87 @@ function PacketSPKGSZip {
         echo $ZipFile >> $OutputFilePath\ZipFile.txt
     }
 }
+function Unzip {
+    if([io.file]::Exists("$SignedFilePath\ZipFile.txt") -ne "True"){
+        return "False"
+    }
+
+    [String]$ZipFile = Get-Content "$SignedFilePath\ZipFile.txt"
+    if($ZipFile.Equals("")){
+        return "False"
+    }
+    [String]$BaseName = Get-Item "$SignedFilePath\$ZipFile" |%{$_.BaseName}
+
+    if($BaseName.Equals("")){
+        return "False"
+    }
+    
+    if([io.Directory]::Exists("$SignedFilePath\$BaseName")){
+        $host.ui.WriteWarningLine("Zip File has Unziped")
+        return "True"
+    }
+    [String]$drop = unzip "$SignedFilePath\$ZipFile" "$SignedFilePath\$BaseName"
+
+    if($drop.Equals("")){
+        exit
+        #return "False"
+    }
+
+    return "True"
+}
+function CopySPKGS {
+    $xmldata = [xml](Get-Content "$RetailPath\UpdateHistory.xml")
+    $doc = $xmldata.DocumentElement.GetElementsByTagName("Package")
+    $filefolder = Get-ChildItem $SrcDir -recurse |%{$_.DirectoryName}
+    
+    if((Unzip) -eq "False"){
+        return "False"
+    }
+    
+    foreach($i in $doc){
+        [String]$SpkgPath = $i.PackageFile
+        $Name = $SpkgPath.Substring($SpkgPath.LastIndexOf("\")+1,$SpkgPath.Length - $SpkgPath.LastIndexOf("\") - 1)
+        $DestDir = $SpkgPath.Substring(0,$SpkgPath.LastIndexOf("\"))
+        
+        foreach($f in $filefolder){
+            if(([io.File]::Exists("$f\$Name")) -eq "True"){
+
+                if(([io.Directory]::Exists("$DestDir")) -ne "True"){
+                    $drop = New-Item -type directory $DestDir
+                }
+
+                Copy-Item -Path “$f\$Name" -Destination $DestDir -Verbose -Recurse -Force
+                break
+            }
+        }
+    }
+
+    return "True"
+}
+
+function CreateFFU ($ffutype){
+    Invoke-Expression -Command "$env:BSPROOT\create_ffu.bat $ffutype"
+}
+
+function BuildSubSystem {
+    $bspdir = $env:BSPROOT + "\..\..\..\"
+    if(([io.File]::Exists("$bspdir\SubSystemBuiltFlag")) -ne "True"){
+        Copy-Item "$bspdir\int_tools\build-wp8909-1074.cmd" "$bspdir" -Force
+        $drop = New-Item  -type File "$bspdir\SubSystemBuiltFlag" -Value "Don't Delete this File, unless you will build subsystem!"
+        Invoke-Expression -Command "$bspdir\build-wp8909-1074.cmd -ALL"
+    }
+}
+
+echo "=============Start Build SubSystem================="
+#Build SubSystem
+BuildSubSystem
+#end BuildSystem
+
+
+echo "=============Start Build FFU First================="
+#Build FFU First
+CreateFFU retail
+
 
 echo "=============Start Flight Signing=================="
 
@@ -133,9 +226,16 @@ UploadZip
 echo "end UploadZip"
 
 #Download Packeted Zip from MSFT
-if(DownloadZip -ne "True"){
-   echo "Retry."
+while((DownloadZip) -ne "True"){
+   $host.ui.WriteWarningLine("******************* Download Failed 5 Seconds Later Retry UploadZip **************")
+   Start-Sleep -Seconds 5
    UploadZip
 }
+#Copy Signed spkg to project
+CopySPKGS
+echo "end CopySPKGS"
+
+#Build FFU First
+CreateFFU retail
 
 echo "=============End Flight Signing=================="
