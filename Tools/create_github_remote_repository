@@ -1,9 +1,27 @@
-#/sh/bin
-$username = $1
-$RepoName = $2
-$description = (($3 == "") ? "Create $RepoName date" : "$3")
+#!/bin/sh
 
-echo "Name ="$username
-echo "RepoName ="$RepoName
+if [ -z $1 ]
+then
+  echo "parameter error!"
+  exit
+fi
+
+#
+username=$1
+RepoName=$2
+if [ -z "$3" ]
+then
+  description="Create a $RepoName at "$(date +%Y-%m-%d)
+else
+  description=$3
+fi
+echo "Name =" $username
+echo "RepoName =" $RepoName
 echo "Description =" $description
-curl -u '$username' https://api.github.com/user/repos -d '{"name":"$RepoName", "description", "$description"}'
+#data="'{\"name\":\""${RepoName}"\",\"description\":\""${description}"\"}'"
+data="{\"name\":\""${RepoName}"\",\"description\":\""${description}"\"}"
+echo "Data1 = "$data
+Data2='{"name":"TSt222","description":"222222"}'
+echo "Data2 = "$Data2
+#'{"name":$RepoName,"description":$description}'
+curl -u $username https://api.github.com/user/repos -d "$data"

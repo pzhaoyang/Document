@@ -235,7 +235,7 @@ while((DownloadZip) -ne "True"){
 CopySPKGS
 echo "end CopySPKGS"
 
-#Build FFU First
+#Build FFU Second
 CreateFFU retail
 
 echo "=============End Flight Signing=================="
