@@ -178,7 +178,7 @@ function CopySPKGS {
                     $drop = New-Item -type directory $DestDir
                 }
 
-                Copy-Item -Path “$f\$Name" -Destination $DestDir -Verbose -Recurse -Force
+                Copy-Item -Path "$f\$Name" -Destination $DestDir -Verbose -Recurse -Force
                 break
             }
         }
