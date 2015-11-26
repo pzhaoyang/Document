@@ -1,0 +1,30 @@
+1.Generate SPKGS zip package
+  Initialize-FirmwareSubmission -TypeOfSubmission Image -TypeOfProduct WINDOWSPHONETHRESHOLD -UpdateHistoryPath D:\tcl_projects\FlightSign\retail -OemInputPath D:\tcl_projects\FlightSign\retail\ProcessedFiles -OutputFilePath D:\tcl_projects\FlightSign\retail\ZipOutPut -Baseline
+
+
+2. Upload zip package
+  New-FirmwareSubmission -verbose -path D:\tcl_projects\wp\code\amss_8909\wp\prebuilt\8909\ICD_project\retail\ZipOutPut\ALCATELONE-TEST_ALCATELONE_TMO-US_1077.0.0002.1001_Image.zip
+  
+
+3. Download zip package
+  Get-SignedFirmwareSubmission -verbose -FirmwareSubmissionTicketId TKT-SIGN-PROD-HMZ0WL
+ -DownloadDirectory D:\tcl_projects\FlightSign\SignedZip
+  
+  
+ 4. Generate ffu zip package
+  Initialize-FirmwareSubmission -TypeOfSubmission FFUCATALOG -TypeOfProduct WINDOWSPHONETHRESHOLD -FfuPath D:\tcl_projects\FlightSign\retail\Flash.FFU -UpdateHistoryPath D:\tcl_projects\FlightSign\retail -OemInputPath D:\tcl_projects\FlightSign\retail\ProcessedFiles -OutputFilePath D:\tcl_projects\FlightSign\ZipOutPut
+  
+  
+5. Merge cat file to FFU image using windows command shell
+  ImageSigner SIGN Flash.ffu Flash.ffu.cat
+
+
+6. Request for Update
+ New-RequestForUpdate –OemName ALCATELONETOUCH -FirmwareSubmissionTicketId TKT-SIGN-PROD-6ETPXC -RequestForUpdateType Trial -SourceFirmwareSubmissionTicketId TKT-SIGN-PROD-6ETPXC -OemDeviceName 5055W -MOID TMO-US
+
+
+7. For Update OTA INFO
+  Get-RequestForUpdate -RequestForUpdateTicketId TKT-SIGN-PROD-6ETPXC
+  
+  
+  Get-RequestForUpdate -RequestForUpdateTicketId TKT-SIGN-PROD-6ETPXC
